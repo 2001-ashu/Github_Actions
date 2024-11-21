@@ -1,4 +1,4 @@
-name: Serve HTML File on Window
+name: Serve HTML File on Windows
 
 on:
   push:
@@ -14,10 +14,21 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # Step 2: Serve the HTML file
+      # Step 2: Verify Python installation
+      - name: Verify Python Installation
+        run: python --version
+
+      # Step 3: Serve the HTML file
       - name: Serve HTML
         run: |
-      
-          python -m http.server 8080 &
-          timeout 5
-          curl http://127.0.0.1:8080/index.html
+          start /B python -m http.server 8080
+          echo "Waiting for server to start..."
+          for /L %%i in (1,10) do (
+            curl --silent --output /dev/null http://127.0.0.1:8080/index.html && exit /B 0
+            timeout 1 >nul
+          )
+          echo "Server failed to start" && exit /B 1
+
+      # Step 4: Verify HTML file is served
+      - name: Fetch HTML file
+        run: curl http://127.0.0.1:8080/index.html
